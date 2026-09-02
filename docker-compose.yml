@@ -1,0 +1,67 @@
+services:
+  # MySQL 8.0 Enterprise Relational Database
+  mysqldb:
+    image: mysql:8.0
+    container_name: servicedesk-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root-password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-servicedesk_db}
+      MYSQL_USER: ${MYSQL_USER:-sd_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me-database-password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - servicedesk-net
+
+  # Spring Boot 3 Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: servicedesk-backend
+    restart: always
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/${MYSQL_DATABASE:-servicedesk_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-sd_user}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-change-me-database-password}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-change-this-development-jwt-secret-before-production-please}
+    ports:
+      - "8080:8080"
+    volumes:
+      - attachment_uploads:/app/uploads
+    networks:
+      - servicedesk-net
+
+  # React 18 + TypeScript Frontend SPA
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: servicedesk-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - servicedesk-net
+
+volumes:
+  mysql_data:
+  attachment_uploads:
+
+networks:
+  servicedesk-net:
+    driver: bridge

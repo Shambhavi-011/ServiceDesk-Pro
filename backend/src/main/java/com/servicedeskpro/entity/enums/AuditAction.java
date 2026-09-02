@@ -1,0 +1,16 @@
+package com.servicedeskpro.entity.enums;
+
+public enum AuditAction {
+    TICKET_CREATED,
+    STATUS_CHANGED,
+    AGENT_ASSIGNED,
+    AGENT_REASSIGNED,
+    PRIORITY_CHANGED,
+    COMMENT_ADDED,
+    ATTACHMENT_UPLOADED,
+    TICKET_REOPENED,
+    TICKET_RESOLVED,
+    TICKET_CLOSED,
+    USER_ROLE_CHANGED,
+    USER_STATUS_CHANGED
+}

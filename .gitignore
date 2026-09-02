@@ -1,0 +1,15 @@
+# Java / Maven
+backend/target/
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+
+# Runtime data
+backend/uploads/
+*.log
+
+# Local environment files
+.env
+.env.*
+!.env.example
