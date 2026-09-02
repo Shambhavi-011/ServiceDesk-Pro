@@ -19,7 +19,7 @@ spring:
 # Application specific enterprise configurations
 app:
   jwt:
-    secret: ${JWT_SECRET:change-this-development-jwt-secret-before-production-please}
+    secret: ${JWT_SECRET:c2VydmljZWRlc2stcHJvLWRldmVsb3BtZW50LWp3dC1zZWNyZXQta2V5LTIwMjY=}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days
   storage:

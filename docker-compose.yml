@@ -10,7 +10,7 @@ services:
       MYSQL_USER: ${MYSQL_USER:-sd_user}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me-database-password}
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -36,7 +36,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/${MYSQL_DATABASE:-servicedesk_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-sd_user}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-change-me-database-password}
-      APP_JWT_SECRET: ${APP_JWT_SECRET:-change-this-development-jwt-secret-before-production-please}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-c2VydmljZWRlc2stcHJvLWRldmVsb3BtZW50LWp3dC1zZWNyZXQta2V5LTIwMjY=}
     ports:
       - "8080:8080"
     volumes:
