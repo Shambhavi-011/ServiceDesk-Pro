@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { RoleName, UserProfile } from '../types';
 import { authApi } from '../api/authApi';
 
@@ -17,36 +18,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('accessToken');
+
       if (token) {
         try {
           const profile = await authApi.getProfile();
           setUser(profile);
         } catch {
-          localStorage.clear();
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
           setUser(null);
         }
       }
+
       setIsLoading(false);
     };
 
     initAuth();
   }, []);
 
-  const login = (token: string, refreshToken: string, userProfile: UserProfile) => {
+  const login = (
+    token: string,
+    refreshToken: string,
+    userProfile: UserProfile
+  ) => {
     localStorage.setItem('accessToken', token);
     localStorage.setItem('refreshToken', refreshToken);
     setUser(userProfile);
   };
 
   const logout = async () => {
-    try {
-      await authApi.logout();
-    } finally {
-      setUser(null);
-      window.location.href = '/login';
+    const refreshToken = localStorage.getItem('refreshToken');
+    const accessToken = localStorage.getItem('accessToken');
+
+    // User ko immediately logout karo
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+
+    setUser(null);
+
+    // React Router navigation — full page reload nahi
+    navigate('/login', { replace: true });
+
+    // Backend logout best-effort hai.
+    // Iske response ka UI ko wait nahi karna.
+    if (refreshToken) {
+      fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken
+            ? { Authorization: `Bearer ${accessToken}` }
+            : {}),
+        },
+        body: JSON.stringify({ refreshToken }),
+      }).catch(() => {
+        // Local logout already complete hai
+      });
     }
   };
 
@@ -55,7 +87,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout, hasRole }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        logout,
+        hasRole,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -63,8 +104,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+
   return context;
 };
